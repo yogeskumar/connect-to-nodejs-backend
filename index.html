@@ -1,0 +1,296 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Product Data</title>
+    <style>
+      body {
+        font-family: Arial, sans-serif;
+        margin: 20px;
+      }
+
+      .container {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+      }
+
+      h1 {
+        text-align: center;
+      }
+
+      .form-container {
+        margin-top: 20px;
+        display: flex;
+        flex-wrap: wrap;
+        justify-content: center;
+        align-items: center;
+      }
+
+      label {
+        font-weight: bold;
+        margin-right: 10px;
+      }
+
+      select {
+        padding: 5px;
+      }
+
+      .button-container {
+        margin-top: 10px;
+        display: flex;
+        justify-content: center;
+        gap: 10px;
+      }
+
+      button {
+        padding: 8px 15px;
+        background-color: #4caf50;
+        color: white;
+        border: none;
+        cursor: pointer;
+      }
+
+      .result-container {
+        margin-top: 20px;
+        text-align: center;
+      }
+
+      .result {
+        margin-bottom: 10px;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <h1>Product Data</h1>
+
+      <div class="form-container">
+        <label for="month">Month:</label>
+        <select id="month" name="month">
+          <option value="January">January</option>
+          <option value="February">February</option>
+          <option value="March">March</option>
+          <option value="April">April</option>
+          <option value="May">May</option>
+          <option value="June">June</option>
+          <option value="July">July</option>
+          <option value="August">August</option>
+          <option value="September">September</option>
+          <option value="October">October</option>
+          <option value="November">November</option>
+          <option value="December">December</option>
+        </select>
+      </div>
+
+      <div class="button-container">
+        <button onclick="getStatistics()">Get Statistics</button>
+        <button onclick="getBarChart()">Get Bar Chart</button>
+        <button onclick="getPieChart()">Get Pie Chart</button>
+        <button onclick="getCombinedData()">Get Combined Data</button>
+      </div>
+
+      <div class="result-container">
+        <div class="result" id="statisticsResult"></div>
+        <div class="result" id="barChartResult"></div>
+        <div class="result" id="pieChartResult"></div>
+        <div class="result" id="combinedDataResult"></div>
+      </div>
+    </div>
+
+    <script>
+      const apiUrl = "https://nodejs-backend-l0ln.onrender.com";
+
+      function extractMonthNumber(month) {
+        const months = {
+          january: 1,
+          february: 2,
+          march: 3,
+          april: 4,
+          may: 5,
+          june: 6,
+          july: 7,
+          august: 8,
+          september: 9,
+          october: 10,
+          november: 11,
+          december: 12,
+        };
+
+        const regex =
+          /(january|february|march|april|may|june|july|august|september|october|november|december|\d+)/i;
+        const matches = month.match(regex);
+
+        if (matches && matches.length > 0) {
+          const match = matches[0].toLowerCase();
+
+          // Check if the match is a month name
+          if (months.hasOwnProperty(match)) {
+            return months[match];
+          }
+        }
+
+        return 1; // Return null if no month or number is found in the string
+      }
+
+      function getStatistics() {
+        const month_value = document.getElementById("month").value;
+        const month = extractMonthNumber(month_value);
+        const statistics_result = document.getElementById("statisticsResult");
+        const barchart_result = document.getElementById("barChartResult");
+        const piechart_result = document.getElementById("pieChartResult");
+        const combineddata_result =
+          document.getElementById("combinedDataResult");
+
+        statistics_result.textContent = "Loading...";
+        barchart_result.textContent = "";
+        piechart_result.textContent = "";
+        combineddata_result.textContent = "";
+        // console.log(month);
+
+        const url = `${apiUrl}/statistics/${month}`;
+
+        fetch(url)
+          .then((response) => response.json())
+          .then((data) => {
+            const resultContainer = document.getElementById("statisticsResult");
+            resultContainer.textContent = `Total Sale Amount: $${data.totalSaleAmount.toFixed(
+              2
+            )}, Total Sold Items: ${
+              data.totalSoldItems
+            }, Total Not Sold Items: ${data.totalNotSoldItems}`;
+          })
+          .catch((error) => {
+            console.error("Error getting statistics", error);
+            const resultContainer = document.getElementById("statisticsResult");
+            resultContainer.textContent = "Error retrieving statistics";
+          });
+      }
+
+      function getBarChart() {
+        const month_value = document.getElementById("month").value;
+        const month = extractMonthNumber(month_value);
+        const statistics_result = document.getElementById("statisticsResult");
+        const barchart_result = document.getElementById("barChartResult");
+        const piechart_result = document.getElementById("pieChartResult");
+        const combineddata_result =
+          document.getElementById("combinedDataResult");
+
+        statistics_result.textContent = "";
+        barchart_result.textContent = "Loading...";
+        piechart_result.textContent = "";
+        combineddata_result.textContent = "";
+        // console.log(month);
+        const url = `${apiUrl}/bar-chart/${month}`;
+
+        fetch(url)
+          .then((response) => response.json())
+          .then((data) => {
+            const resultContainer = document.getElementById("barChartResult");
+            resultContainer.innerHTML = "<h3>Bar Chart</h3>";
+            const chartData = data.priceRangeCounts
+              .map(
+                (count, index) =>
+                  `Range ${data.priceRanges[index].min} - ${data.priceRanges[index].max}: ${count}`
+              )
+              .join("<br>");
+            resultContainer.innerHTML += chartData;
+          })
+          .catch((error) => {
+            console.error("Error getting bar chart data", error);
+            const resultContainer = document.getElementById("barChartResult");
+            resultContainer.textContent = "Error retrieving bar chart data";
+          });
+      }
+
+      function getPieChart() {
+        const month_value = document.getElementById("month").value;
+        const month = extractMonthNumber(month_value);
+        const statistics_result = document.getElementById("statisticsResult");
+        const barchart_result = document.getElementById("barChartResult");
+        const piechart_result = document.getElementById("pieChartResult");
+        const combineddata_result =
+          document.getElementById("combinedDataResult");
+
+        statistics_result.textContent = "";
+        barchart_result.textContent = "";
+        piechart_result.textContent = "Loading...";
+        combineddata_result.textContent = "";
+        // console.log(month);
+        const url = `${apiUrl}/pie-chart/${month}`;
+
+        fetch(url)
+          .then((response) => response.json())
+          .then((data) => {
+            const resultContainer = document.getElementById("pieChartResult");
+            resultContainer.innerHTML = "<h3>Pie Chart</h3>";
+            const chartData = data.categoryCounts
+              .map((category) => `${category._id}: ${category.count}`)
+              .join("<br>");
+            resultContainer.innerHTML += chartData;
+          })
+          .catch((error) => {
+            console.error("Error getting pie chart data", error);
+            const resultContainer = document.getElementById("pieChartResult");
+            resultContainer.textContent = "Error retrieving pie chart data";
+          });
+      }
+
+      function getCombinedData() {
+        const month_value = document.getElementById("month").value;
+        const month = extractMonthNumber(month_value);
+        const statistics_result = document.getElementById("statisticsResult");
+        const barchart_result = document.getElementById("barChartResult");
+        const piechart_result = document.getElementById("pieChartResult");
+        const combineddata_result =
+          document.getElementById("combinedDataResult");
+
+        statistics_result.textContent = "Loading...";
+        barchart_result.textContent = "";
+        piechart_result.textContent = "";
+        combineddata_result.textContent = "";
+
+        const url = `${apiUrl}/combined-data/${month}`;
+
+        fetch(url)
+          .then((response) => response.json())
+          .then((data) => {
+            // Display statistics data
+            statistics_result.innerHTML = "<h3>Statistics</h3>";
+            statistics_result.innerHTML += `Total Sale Amount: ${data.totalSaleAmount}<br>`;
+            statistics_result.innerHTML += `Total Sold Items: ${data.totalSoldItems}<br>`;
+            statistics_result.innerHTML += `Total Not Sold Items: ${data.totalNotSoldItems}<br><br>`;
+
+            // Display bar chart data
+            barchart_result.innerHTML = "<h3>Bar Chart</h3>";
+            data.priceRanges.forEach((range, index) => {
+              const count = data.priceRangeCounts[index];
+              barchart_result.innerHTML += `${range.min} - ${range.max}: ${count}<br>`;
+            });
+            barchart_result.innerHTML += "<br>";
+
+            // Display pie chart data
+            piechart_result.innerHTML = "<h3>Pie Chart</h3>";
+            data.categoryCounts.forEach((category) => {
+              const categoryName = category._id;
+              const itemCount = category.count;
+              piechart_result.innerHTML += `${categoryName}: ${itemCount}<br>`;
+            });
+            piechart_result.innerHTML += "<br>";
+
+            // Display combined data
+            // const resultContainer =
+            //   document.getElementById("combinedDataResult");
+            // resultContainer.innerHTML = "<h3>Combined Data</h3>";
+            // const combinedData = JSON.stringify(data, null, 2);
+            // resultContainer.innerHTML += `<pre>${combinedData}</pre>`;
+          })
+          .catch((error) => {
+            console.error("Error getting combined data", error);
+            const resultContainer =
+              document.getElementById("combinedDataResult");
+            resultContainer.textContent = "Error retrieving combined data";
+          });
+      }
+    </script>
+  </body>
+</html>
